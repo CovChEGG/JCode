@@ -39,14 +39,14 @@ public class in2post {
         }};
         ArrayList<StringBuilder> arExp = toArrayExp(exp);
         System.out.println(arExp);
-        /* 
+        // /*0 
         ArrayDeque<StringBuilder> stackOp = new ArrayDeque<>();
         ArrayDeque<StringBuilder> queueOut = new ArrayDeque<>();
         StringBuilder tmp = new StringBuilder();
         // int numOfBrackets = 0;
         for (StringBuilder strBuild : arExp) {
-            System.out.println(strBuild);
             if(brackets.containsValue(strBuild)) { // проверка наличия закрывающейся скобки
+                System.out.println(strBuild);
                 while(!stackOp.getLast().equals(strBuild)) { // выгрузка в очередь из стека до открытой скобки
                     if(!stackOp.isEmpty()){
                         System.out.println("Не согласованные скобки!!!");
@@ -60,12 +60,14 @@ public class in2post {
                 tmp = new StringBuilder();
             } else if(brackets.containsKey(strBuild)) {
                 tmp.append(brackets.get(strBuild));
+                System.out.println(strBuild);
                 stackOp.addLast(tmp);
-
                 tmp = new StringBuilder();
             } else if(preFixOp.contains(strBuild.toString())) {
+                System.out.println(strBuild);
                 stackOp.addLast(strBuild);
             } else if(biOp.containsKey(strBuild.charAt(0))) { // если бинарная операция
+                System.out.println(strBuild);
                 if(!stackOp.isEmpty()) {
                     // tmp.append(stackOp.getLast());
                     if(preFixOp.contains(stackOp.getLast().toString()) || // проверка стека на префиксную операцию
@@ -79,13 +81,15 @@ public class in2post {
             } else if((pstFixOp.contains(strBuild.toString()))) {
                 queueOut.addLast(strBuild);
             } else {
+                System.out.println(strBuild);
                 queueOut.addLast(strBuild);
             }
-            // while(!stackOp.isEmpty()){
-            //     queueOut.addLast(stackOp.peekLast());
-            // }
         }
-        */   
+        while(!stackOp.isEmpty()){
+            queueOut.addLast(stackOp.pop());
+        }
+        System.out.println(queueOut);
+        // */ 
     }
 
     /**
