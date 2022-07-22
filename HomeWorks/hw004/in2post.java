@@ -3,8 +3,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
-import java.util.Stack;
 
 /*
 Реализовать алгоритм перевода из инфиксной записи в постфиксную для арифметического выражения.
@@ -17,35 +15,77 @@ import java.util.Stack;
 public class in2post {
     public static void main(String[] args) {
 
-        String exp = "(2^3 * (10 / (5 - 3)))^(Sin(Pi))";
-        // String exp = "2^3";
+        //String exp = "(2^3 * (10 / (5 - 3)))^(Sin(Pi))";
+        String exp = "2+3";
         exp = exp.trim().replace(" ", "").toLowerCase();
         in2po(exp);
-
     }
 
     public static void in2po(String exp) {
-
-        // ArrayDeque<StringBuilder> stackOp = new ArrayDeque<>();
-        // ArrayDeque<StringBuilder> queueOut = new ArrayDeque<>();
-        // var brackets = new HashMap<String, String>(){{
-        // put("(", ")");
+        var pstFixOp = new HashSet<String>(Arrays.asList("!"));
+        var preFixOp = new HashSet<String>(Arrays.asList("sin", "cos", "tg", "ln"));
+        var brackets = new HashMap<Character, Character>(){{
+            put('(', ')');
         // put("<", ">");
         // put("[", "]");
         // put("{", "}");
-        // }};
-        // var biOp = new HashMap<Char, Integer>(){{
-        // put('^'', 1);
-        // put('*', 2);
-        // put('/', 2);
-        // put('+', 3);
-        // put('-', 3);
-        // }};
-
-        // var pstFixOp = new HashSet<String>(Arrays.asList("!"));
-        // var preFixOp = new HashSet<String>(Arrays.asList("sin", "cos", "tg", "ln"));
+        }};
+        var biOp = new HashMap<Character, Integer>(){{
+            put('^', 2);
+            put('*', 3);
+            put('/', 3);
+            put('+', 4);
+            put('-', 4);
+        }};
         ArrayList<StringBuilder> arExp = toArrayExp(exp);
         System.out.println(arExp);
+        /* 
+        ArrayDeque<StringBuilder> stackOp = new ArrayDeque<>();
+        ArrayDeque<StringBuilder> queueOut = new ArrayDeque<>();
+        StringBuilder tmp = new StringBuilder();
+        // int numOfBrackets = 0;
+        for (StringBuilder strBuild : arExp) {
+            System.out.println(strBuild);
+            if(brackets.containsValue(strBuild)) { // проверка наличия закрывающейся скобки
+                while(!stackOp.getLast().equals(strBuild)) { // выгрузка в очередь из стека до открытой скобки
+                    if(!stackOp.isEmpty()){
+                        System.out.println("Не согласованные скобки!!!");
+                        System.exit(0); // завершение программы из-за несоответствия скобок
+                    } else {
+                        queueOut.addLast(stackOp.peekLast()); // выгрузка из стека в очередь
+                        System.out.println("выгрузка из стека в очередь" + queueOut.getLast());
+                    }
+                }
+                stackOp.peekLast(); // удаление скобки из стека
+                tmp = new StringBuilder();
+            } else if(brackets.containsKey(strBuild)) {
+                tmp.append(brackets.get(strBuild));
+                stackOp.addLast(tmp);
+
+                tmp = new StringBuilder();
+            } else if(preFixOp.contains(strBuild.toString())) {
+                stackOp.addLast(strBuild);
+            } else if(biOp.containsKey(strBuild.charAt(0))) { // если бинарная операция
+                if(!stackOp.isEmpty()) {
+                    // tmp.append(stackOp.getLast());
+                    if(preFixOp.contains(stackOp.getLast().toString()) || // проверка стека на префиксную операцию
+                        biOp.get(stackOp.getLast().charAt(0)) < // приоритет бинарных операций
+                        biOp.get(strBuild.charAt(0)) 
+                      ) { 
+                        queueOut.addLast(stackOp.peekLast()); // добавление в очередь из стека преф/оп.
+                    }
+                }
+                stackOp.addLast(strBuild);
+            } else if((pstFixOp.contains(strBuild.toString()))) {
+                queueOut.addLast(strBuild);
+            } else {
+                queueOut.addLast(strBuild);
+            }
+            // while(!stackOp.isEmpty()){
+            //     queueOut.addLast(stackOp.peekLast());
+            // }
+        }
+        */   
     }
 
     /**
@@ -59,34 +99,33 @@ public class in2post {
         StringBuilder tmp = new StringBuilder();
         Character curCh;
         int tmpSize = tmp.length();
+        
         for (int index = 0; index < in.length(); index++) {
             curCh = in.charAt(index);
-            if (chIsDig(curCh)) { // набор числа
-                if (tmpSize > 0 && chIsLet(tmp.charAt(tmpSize - 1))) {
-                    arExp.add(tmp); // запись слова если есть в список
-                    tmp = new StringBuilder();
+            if (chIsDig(curCh)) { // набор "числа"
+                if (tmpSize > 0 && chIsLet(tmp.charAt(tmpSize - 1))) { 
+                    arExp.add(tmp); // запись слова если есть в tmp в список
+                    
                 }
                 tmp.append(curCh);
             } else if (chIsLet(curCh)) { // набор "слова"
-                if (tmp.length() > 0 && chIsDig(tmp.charAt(tmpSize - 1))) {
-                    arExp.add(tmp); // запись набранного числа если есть в список
+                if (tmpSize > 0 && chIsDig(tmp.charAt(tmpSize - 1))) {
+                    arExp.add(tmp); // запись набранного числа если есть в tmp в список
                     tmp = new StringBuilder();
                 }
                 tmp.append(curCh);
-            } else {
+            } else { // для символов 
                 if (tmp.length() != 0) {
-                    arExp.add(tmp);
+                    arExp.add(tmp); // запись tmp в список если появлился символ не из числа или слова
                     tmp = new StringBuilder();
                 }
-                tmp.append(curCh);
-                arExp.add(tmp);
+                tmp.append(curCh); 
+                arExp.add(tmp); // добавляем новый символ
                 tmp = new StringBuilder();
             }
-            System.out.println(tmp);
+            tmpSize = tmp.length();
             if (index == in.length() - 1 && tmpSize > 0)
-                arExp.add(tmp);
-            else
-                tmpSize = tmp.length();
+                arExp.add(tmp); // запись tmp в список если больше нет элементов
         }
         return arExp;
     }
