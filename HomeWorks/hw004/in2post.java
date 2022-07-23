@@ -15,20 +15,21 @@ import java.util.HashSet;
 public class in2post {
     public static void main(String[] args) {
 
-        //String exp = "(2^3 * (10 / (5 - 3)))^(Sin(Pi))";
-        String exp = "2+3";
+        String exp = "(2^3 * (10 / (5 - 3)))^(Sin(Pi))";
+        // String exp = "3 + 4 * 2 / (1 - 5)^2";
         exp = exp.trim().replace(" ", "").toLowerCase();
         in2po(exp);
     }
 
     public static void in2po(String exp) {
         var pstFixOp = new HashSet<String>(Arrays.asList("!"));
+        var constants = new HashSet<String>(Arrays.asList("pi"));
         var preFixOp = new HashSet<String>(Arrays.asList("sin", "cos", "tg", "ln"));
         var brackets = new HashMap<Character, Character>(){{
             put('(', ')');
-        // put("<", ">");
-        // put("[", "]");
-        // put("{", "}");
+            put('<', '>');
+            put('[', ']');
+            put('{', '}');
         }};
         var biOp = new HashMap<Character, Integer>(){{
             put('^', 2);
@@ -39,57 +40,51 @@ public class in2post {
         }};
         ArrayList<StringBuilder> arExp = toArrayExp(exp);
         System.out.println(arExp);
-        // /*0 
         ArrayDeque<StringBuilder> stackOp = new ArrayDeque<>();
         ArrayDeque<StringBuilder> queueOut = new ArrayDeque<>();
-        StringBuilder tmp = new StringBuilder();
-        // int numOfBrackets = 0;
         for (StringBuilder strBuild : arExp) {
-            if(brackets.containsValue(strBuild)) { // проверка наличия закрывающейся скобки
-                System.out.println(strBuild);
-                while(!stackOp.getLast().equals(strBuild)) { // выгрузка в очередь из стека до открытой скобки
-                    if(!stackOp.isEmpty()){
+            if(brackets.containsValue(strBuild.charAt(0))) { // проверка наличия закрывающейся скобки
+                while(true) {
+                    if(stackOp.isEmpty()){ // если стэк пустой и скобки не нашлось
                         System.out.println("Не согласованные скобки!!!");
-                        System.exit(0); // завершение программы из-за несоответствия скобок
-                    } else {
-                        queueOut.addLast(stackOp.peekLast()); // выгрузка из стека в очередь
-                        System.out.println("выгрузка из стека в очередь" + queueOut.getLast());
+                        // завершение программы из-за несоответствия скобок
+                        System.exit(0); 
+                        // иначе найдена ли какая-нибудь закрывающая скобка в стеке?
+                    } else if(brackets.containsKey(stackOp.peekLast().charAt(0))) { 
+                        // соответствующая ли скобка?
+                        if(brackets.get(stackOp.peekLast().charAt(0)) == strBuild.charAt(0)) {
+                            // удаление отрывающейся - соответсвтующей входящей - закрывающейся скобке из стека
+                            stackOp.pollLast();
+                            break;
+                        }
                     }
+                    queueOut.addLast(stackOp.pollLast());
                 }
-                stackOp.peekLast(); // удаление скобки из стека
-                tmp = new StringBuilder();
-            } else if(brackets.containsKey(strBuild)) {
-                tmp.append(brackets.get(strBuild));
-                System.out.println(strBuild);
-                stackOp.addLast(tmp);
-                tmp = new StringBuilder();
+            } else if(brackets.containsKey(strBuild.charAt(0))) {
+                stackOp.addLast(strBuild);
             } else if(preFixOp.contains(strBuild.toString())) {
-                System.out.println(strBuild);
                 stackOp.addLast(strBuild);
             } else if(biOp.containsKey(strBuild.charAt(0))) { // если бинарная операция
-                System.out.println(strBuild);
-                if(!stackOp.isEmpty()) {
-                    // tmp.append(stackOp.getLast());
-                    if(preFixOp.contains(stackOp.getLast().toString()) || // проверка стека на префиксную операцию
-                        biOp.get(stackOp.getLast().charAt(0)) < // приоритет бинарных операций
-                        biOp.get(strBuild.charAt(0)) 
-                      ) { 
-                        queueOut.addLast(stackOp.peekLast()); // добавление в очередь из стека преф/оп.
-                    }
+                while(!stackOp.isEmpty() && (
+                        preFixOp.contains(stackOp.peekLast().toString()) ||  // проверка стека на префиксную операцию
+                        biOp.containsKey(stackOp.peekLast().charAt(0)) && 
+                        (biOp.get(stackOp.peekLast().charAt(0)) <= biOp.get(strBuild.charAt(0))))) { 
+                    queueOut.addLast(stackOp.pollLast() ); // добавление в очередь из стека преф/оп.
                 }
                 stackOp.addLast(strBuild);
-            } else if((pstFixOp.contains(strBuild.toString()))) {
+            } else if((pstFixOp.contains(strBuild.toString())) || constants.contains(strBuild)) {
                 queueOut.addLast(strBuild);
             } else {
-                System.out.println(strBuild);
                 queueOut.addLast(strBuild);
             }
+        // System.out.println("Очередь:" + queueOut);
+        // System.out.println("Стек:" + stackOp);
+
         }
         while(!stackOp.isEmpty()){
-            queueOut.addLast(stackOp.pop());
+            queueOut.addLast(stackOp.pollLast());
         }
-        System.out.println(queueOut);
-        // */ 
+        System.out.println("Выражение в ОПН: " + queueOut);
     }
 
     /**
