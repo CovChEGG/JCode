@@ -15,13 +15,14 @@ import java.util.HashSet;
 public class in2post {
     public static void main(String[] args) {
 
-        String exp = "(2^3 * (10 / (5 - 3)))^(Sin(Pi))";
-        // String exp = "3 + 4 * 2 / (1 - 5)^2";
-        exp = exp.trim().replace(" ", "").toLowerCase();
+        String exp = "{2^3 * (10 / <5 - 3>)}^(sin(Pi))";
+        // String exp = "3 + 4 * 2 / (1 - 5)^2"; // для проверки
+        System.out.print("\033[H\033[J");
         in2po(exp);
     }
 
     public static void in2po(String exp) {
+        int numOfBrackets = 0;
         var pstFixOp = new HashSet<String>(Arrays.asList("!"));
         var preFixOp = new HashSet<String>(Arrays.asList(
                 "sin", "cos", "tan", "asin", "acos", "atan",
@@ -50,22 +51,22 @@ public class in2post {
             }
         };
         ArrayList<StringBuilder> arExp = toArrayExp(exp);
-        System.out.println(arExp);
+        // System.out.println(arExp); // вывод выражения в массиве
         ArrayDeque<StringBuilder> stackOp = new ArrayDeque<>();
         ArrayDeque<StringBuilder> queueOut = new ArrayDeque<>();
         for (StringBuilder strBuild : arExp) {
             if (brackets.containsValue(strBuild.charAt(0))) { // проверка наличия закрывающейся скобки
                 while (true) {
                     if (stackOp.isEmpty()) { // если стэк пустой и скобки не нашлось
-                        System.out.println("Не согласованные скобки!!!");
+                        stop("Не согласующиеся скобки!!! ( открывающейся не хватает )");
                         // завершение программы из-за несоответствия скобок
-                        System.exit(0);
                         // иначе найдена ли какая-нибудь закрывающая скобка в стеке?
                     } else if (brackets.containsKey(stackOp.peekLast().charAt(0))) {
                         // соответствующая ли скобка?
                         if (brackets.get(stackOp.peekLast().charAt(0)) == strBuild.charAt(0)) {
                             // удаление отрывающейся - соответсвтующей входящей - закрывающейся скобке из
                             // стека
+                            numOfBrackets--;
                             stackOp.pollLast();
                             break;
                         }
@@ -73,6 +74,7 @@ public class in2post {
                     queueOut.addLast(stackOp.pollLast());
                 }
             } else if (brackets.containsKey(strBuild.charAt(0))) {
+                numOfBrackets++;
                 stackOp.addLast(strBuild);
             } else if (preFixOp.contains(strBuild.toString())) {
                 stackOp.addLast(strBuild);
@@ -93,10 +95,12 @@ public class in2post {
         while (!stackOp.isEmpty()) {
             queueOut.addLast(stackOp.pollLast());
         }
-        System.out.println("Выражение в ОПН: " + queueOut); // Получение записи в ОПН
+        
+        if(numOfBrackets == 0) System.out.println("Выражение в ОПН: " + queueOut); // Получение записи в ОПН
+        else stop("Не согласующиеся скобки!!! ( не хватает закрывающейся )");
 
         // вычисление выражения из полученной очереди
-        ArrayDeque<Double> stack = new ArrayDeque<>();
+        ArrayDeque<Double> stack = new ArrayDeque<>(); // организация стека для значений
         while (!queueOut.isEmpty()) {
             if (chIsDig((Character) queueOut.peekFirst().charAt(0))) {
                 stack.addLast(toDoub(queueOut.pollFirst().toString()));
@@ -120,12 +124,13 @@ public class in2post {
                 if (!stack.isEmpty())
                     a = stack.pollLast();
                 else {
-                    stop("Отсутсвтуют операнд для операци: " + "? " + queueOut.peekFirst().toString() + " " + b);
+                    stop("Отсутсвтуют операнд для операци: " + b + " " + queueOut.peekFirst().toString() + " ?");
                 }
                 stack.addLast(calc(queueOut.pollFirst().toString(), a, b));
             }
         }
-        System.out.println(stack);
+        if(stack.size() == 1) System.out.printf("Ответ: %f%n", stack.poll());
+        else stop("Не достаточно операций!");
     }
 
     public static void stop(String text) {
@@ -175,18 +180,14 @@ public class in2post {
         try {
             return Double.parseDouble(tobeDouble);
         } catch (NumberFormatException e) {
-            System.out.println(tobeDouble + "Не является числом!!! Проверьте формулу");
-            System.exit(0);
+            stop(tobeDouble + "Не является числом!!! Проверьте формулу");
         }
         return null;
     }
 
-    /**
-     * @param exp - получает на вход строку с выражением
-     * @return - возвращает список из элементов выражения
-     */
     public static ArrayList<StringBuilder> toArrayExp(String exp) {
-
+        System.out.println("Исходное выражение: " + exp);
+        exp = exp.trim().replace(" ", "").toLowerCase();
         ArrayList<StringBuilder> arExp = new ArrayList<>();
         StringBuilder in = new StringBuilder(exp);
         StringBuilder tmp = new StringBuilder();
