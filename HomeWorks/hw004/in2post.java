@@ -15,8 +15,9 @@ import java.util.HashSet;
 public class in2post {
     public static void main(String[] args) {
 
-        String exp = "{2^3 * (10 / <5 - 3>)}^(sin(Pi))";
+        String exp = "{2^3 * (10 / <5 - 3>)}^[sin(Pi)]";
         // String exp = "3 + 4 * 2 / (1 - 5)^2"; // для проверки
+        // String exp = "{2*2+(3)}! * (exp(3))"; // для проверки
         System.out.print("\033[H\033[J");
         in2po(exp);
     }
@@ -58,7 +59,7 @@ public class in2post {
             if (brackets.containsValue(strBuild.charAt(0))) { // проверка наличия закрывающейся скобки
                 while (true) {
                     if (stackOp.isEmpty()) { // если стэк пустой и скобки не нашлось
-                        stop("Не согласующиеся скобки!!! ( открывающейся не хватает )");
+                        stop("Не согласующиеся скобки!!!");
                         // завершение программы из-за несоответствия скобок
                         // иначе найдена ли какая-нибудь закрывающая скобка в стеке?
                     } else if (brackets.containsKey(stackOp.peekLast().charAt(0))) {
@@ -95,9 +96,11 @@ public class in2post {
         while (!stackOp.isEmpty()) {
             queueOut.addLast(stackOp.pollLast());
         }
-        
-        if(numOfBrackets == 0) System.out.println("Выражение в ОПН: " + queueOut); // Получение записи в ОПН
-        else stop("Не согласующиеся скобки!!! ( не хватает закрывающейся )");
+
+        if (numOfBrackets == 0)
+            System.out.println("Выражение в ОПН: " + queueOut); // Получение записи в ОПН
+        else
+            stop("Не согласующиеся скобки!!!");
 
         // вычисление выражения из полученной очереди
         ArrayDeque<Double> stack = new ArrayDeque<>(); // организация стека для значений
@@ -129,8 +132,10 @@ public class in2post {
                 stack.addLast(calc(queueOut.pollFirst().toString(), a, b));
             }
         }
-        if(stack.size() == 1) System.out.printf("Ответ: %f%n", stack.poll());
-        else stop("Не достаточно операций!");
+        if (stack.size() == 1)
+            System.out.printf("Ответ: %f%n", stack.poll());
+        else
+            stop("Не достаточно операций!");
     }
 
     public static void stop(String text) {
@@ -140,6 +145,10 @@ public class in2post {
 
     public static Double calc(String op, Double a, Double b) {
         switch (op) {
+            case "!":
+                double f = 1;
+                for (double i = 1; i <= a ; i ++) f = f * i;
+                return f;
             case "sin":
                 return Math.sin(a);
             case "cos":
