@@ -16,7 +16,7 @@ public class in2post {
     public static void main(String[] args) {
 
         String exp = "{2^3 * (10 / <5 - 3>)}^[sin(Pi)]";
-        // String exp = "3 + 4 * 2 / (1 - 5)^2"; // для проверки
+        // String exp = "3 + 4 * 2 / (1 - 5)^(2)"; // для проверки
         // String exp = "{2*2+(3)}! * (exp(3))"; // для проверки
         System.out.print("\033[H\033[J");
         in2po(exp);
@@ -26,6 +26,7 @@ public class in2post {
         int numOfBrackets = 0;
         var pstFixOp = new HashSet<String>(Arrays.asList("!"));
         var preFixOp = new HashSet<String>(Arrays.asList(
+                "~",
                 "sin", "cos", "tan", "asin", "acos", "atan",
                 "sqrt", "exp"));
         var constants = new HashMap<String, Double>() {
@@ -51,7 +52,7 @@ public class in2post {
                 put("-", 4);
             }
         };
-        ArrayList<StringBuilder> arExp = toArrayExp(exp);
+        ArrayList<StringBuilder> arExp = toArrayExp(exp, brackets);
         // System.out.println(arExp); // вывод выражения в массиве
         ArrayDeque<StringBuilder> stackOp = new ArrayDeque<>();
         ArrayDeque<StringBuilder> queueOut = new ArrayDeque<>();
@@ -74,7 +75,7 @@ public class in2post {
                     }
                     queueOut.addLast(stackOp.pollLast());
                 }
-            } else if (brackets.containsKey(strBuild.charAt(0))) {
+            } else if (brackets.containsKey(strBuild.charAt(0))) { // проверка наличия откывающейся скобки
                 numOfBrackets++;
                 stackOp.addLast(strBuild);
             } else if (preFixOp.contains(strBuild.toString())) {
@@ -147,8 +148,11 @@ public class in2post {
         switch (op) {
             case "!":
                 double f = 1;
-                for (double i = 1; i <= a ; i ++) f = f * i;
+                for (double i = 1; i <= a; i++)
+                    f = f * i;
                 return f;
+            case "~":
+                return -a;
             case "sin":
                 return Math.sin(a);
             case "cos":
@@ -180,8 +184,7 @@ public class in2post {
                 return a - b;
             default:
                 System.out.println("Не найдена операция: " + op);
-        }
-        ;
+        };
         return null;
     }
 
@@ -194,7 +197,7 @@ public class in2post {
         return null;
     }
 
-    public static ArrayList<StringBuilder> toArrayExp(String exp) {
+    public static ArrayList<StringBuilder> toArrayExp(String exp, HashMap<Character, Character> brackets) {
         System.out.println("Исходное выражение: " + exp);
         exp = exp.trim().replace(" ", "").toLowerCase();
         ArrayList<StringBuilder> arExp = new ArrayList<>();
@@ -205,7 +208,9 @@ public class in2post {
 
         for (int index = 0; index < in.length(); index++) {
             curCh = in.charAt(index);
-            if (chIsDig(curCh)) { // набор "числа"
+            if (curCh == '-' && (index == 0 || brackets.containsKey(in.charAt(index - 1)))) {
+                arExp.add(new StringBuilder().append("~")); // замена унарного минуса
+            } else if (chIsDig(curCh)) { // набор "числа"
                 if (tmpSize > 0 && chIsLet(tmp.charAt(tmpSize - 1))) {
                     arExp.add(tmp); // запись слова если есть в tmp в список
 
