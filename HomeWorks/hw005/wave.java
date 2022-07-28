@@ -1,29 +1,87 @@
 import java.util.ArrayDeque;
+import java.util.Scanner;
 
 public class wave {
     public static void main(String[] args) {
+        
         int x=5,    //  раземеры карты
             y=10;
-        int[][] map = new int[x][y];
-    int sX = 3,     // начальные условия
-        sY = 2,
-        eX = x-1,
-        eY = y-2;
-    map[sX][sY] = 1; // маркер начала
-    map[eX][eY] = -1; // маркер конца
+        int obstacles = 5; // (от 1 до 9) - относительное количество            
+        int[] startEnd = {0, 0, 0, 0}; // массив для передачи начальных и конечных координат
 
-    PrintMap(map);
-    waveS(sX, sY, eX, eY, map);
-    PrintMap(map); 
+        int[][] map = new int[x][y]; // инициализация карты
+
+        Scanner userInput = new Scanner(System.in);
+        fillTheMap(map, obstacles); // заполнение карты начальными условиями
+        PrintMap(map, "Заполенная карта препядствиями (-2) и начальной (1) и конечной (-1) точками");
+        userInput.nextLine();
+        startEnd = findMarkers(map, startEnd); // определение координат начала и конца
+        waveS(map, startEnd); 
+        userInput.nextLine();
+
+        // wayBack(map, s  tartEnd);
+        // PrintMap(map);
+
     }
 
-    public static void waveS (int sX, int sY, int eX, int eY, int[][] map) {
+    public static void fillTheMap(int[][] map, int obs) {
+        int maxX = map.length;
+        int maxY = map[0].length;
+        int x, y;
+        int obSnum = maxX * maxY * obs / 10;
+        int i = 0;
+        while (i < (obSnum + 1)) {
+            x = (int) (Math.random() * maxX);
+            y = (int) (Math.random() * maxY);
+            i++;
+            if(map[x][y] == 0) {
+                if(i < obSnum) map[x][y] = -2; // установка препядствий
+                else if(i == obSnum) map[x][y] = 1; // установка начала
+                else map[x][y] = -1; // установка конца
+            }
+            else i--;
+        }
+    }
+
+    // public static void wayBack (int[][]map, int[] startEnd) {
+    //     int maxX = map.length;
+    //     int maxY = map[0].length;
+
+    // }
+
+    public static int[] findMarkers(int[][] map, int[] startEnd) {
+        int maxX = map.length;
+        int maxY = map[0].length;
+        boolean startFinded = false, endFinded = false;
+        for (int i = 0; i < maxX; i++) {
+            for (int j = 0; j < maxY; j++) {
+                if(map[i][j]==1) {
+                    startEnd[0]=i; startEnd[1]=j;
+                    startFinded=true;
+                } else if(map[i][j]==-1) {
+                    startEnd[2]=i; startEnd[3]=j;
+                    endFinded=true;
+                }
+                if(startFinded && endFinded) return startEnd;
+            }
+        }
+        if(!startFinded && !endFinded) System.out.println("Не заданы начало('1') и конец('-1')!");
+        else if(!startFinded) System.out.println("Не задано начало символом '1'!");
+        else System.out.println("Не задан конец символами '-1'!");
+        return startEnd;
+    }
+
+    public static boolean waveS (int[][] map, int[] startEnd) {
         
         ArrayDeque<Integer> qX = new ArrayDeque<>();
         ArrayDeque<Integer> qY = new ArrayDeque<>();
         ArrayDeque<Integer> qN = new ArrayDeque<>();
         int maxX = map.length;
         int maxY = map[0].length;
+        int sX = startEnd[0];
+        int sY = startEnd[1];
+        int eX = startEnd[2];
+        int eY = startEnd[3];
         qX.add(sX);
         qY.add(sY);
         qN.add(map[sX][sY]);
@@ -40,35 +98,35 @@ public class wave {
 
         while(!finded && !qX.isEmpty()) {
             // берем текущий элемент из очереди
-                cX = qX.pop();
-                // System.out.println(cX + " " + x);
-                cY = qY.pop();
-                cN = qN.pop();
-
+            cX = qX.pop();
+            cY = qY.pop();
+            cN = qN.pop();
             for(int i = 0; i <4 ; i++) { // маркировка окресности если есть возможность 
                 x = cX + moveX[i];
                 y = cY + moveY[i];
                 n = cN + 1;
-                // System.out.println(x + ' ' + y + ' ' + n);
                 if(x >= 0 && x < maxX && y >= 0 && y < maxY && (map[x][y] == 0 || map[x][y] == -1)) {
-                    // if (x == eX && y == eY) { // проверка на искомую координату
-                    if (map[x][y] == -1) { // проверка на конечный маркер - "-1"
+                    if (x == eX && y == eY) { // проверка на искомую координату
+                    // if (map[x][y] == -1) { // проверка на конечный маркер - "-1"
                         map[x][y] = map[x][y] * n;
-                        System.out.println("На " + n + " волне найден маркер\n");
+                        PrintMap(map, "На " + n + " волне найден маркер " + map[x][y]);
                         finded = true;
-                        break;
+                        return finded;
                     }
                     else map[x][y] = n;
                     qX.addLast(x);
                     qY.addLast(y);
                     qN.addLast(n);
-                    
                 } 
             }          
         }
+        PrintMap(map, "Волна не дошла до конечной точки :-(");
+        return false;
     }
 
-    public static void PrintMap(int[][] map) {
+    public static void PrintMap(int[][] map, String text) {
+        System.out.print("\033[H\033[J");
+        System.out.println(text + "\n\n");
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[0].length; j++) {
                 System.out.printf("%4d ", map[i][j]);
@@ -76,6 +134,6 @@ public class wave {
             System.out.println();
             System.out.println();
         }
-        System.out.println();
+        System.out.println("Нажмите 'Enter' чтобы подолжить или 'Ctrl' + 'C', чтобы выйти");
     }
 }
