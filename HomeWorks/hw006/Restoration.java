@@ -1,16 +1,11 @@
 import java.util.HashMap;
+import java.util.function.ToDoubleBiFunction;
 
 public class Restoration {
     final int argsNum = 3;
     final int arg0 = 0;
     final int arg1 = 1;
     final int arg2 = 2;
-    
-    private String sExp;
-    private StringBuilder[] sbArgsArray;
-    private int[] lenOfArgs = new int[argsNum];
-    private int questionsNum = 0;
-    // private int[][] argsQs;
     final HashMap<Character, Integer> ch2int = new HashMap<Character, Integer>() {
         {
             put('1', 1);
@@ -25,6 +20,7 @@ public class Restoration {
             put('0', 0);
             put('?', -1);
         }};
+
     // final HashMap<Integer, Character> ch2int = new HashMap<Character, Integer>() {
     //     {
     //         put('1', 1);
@@ -39,40 +35,65 @@ public class Restoration {
     //         put('0', 0);
     //         put('?', -1);
     //     }};
+    
+    private String sExp;
+    private StringBuilder[] sbArgsArray;
+    private int[] lenOfArgs = new int[argsNum]; 
+    private int maxLen = 0;
+    private int questionsNum = 0;
+    // private int[][] argsQs;
+    
+    
 
 
 
     public Restoration(String s) {
         sExp = s;
         sExp2sbAraryParsing();
-    }
+        for (int i=0; i < argsNum; i++) {
+            System.out.println(sbArgsArray[i].toString());
+        }
+        System.out.println(maxLen);
+        for (int i : lenOfArgs) System.out.println(i);
+    }    
 
-    
-
+    /** Переводит выражение из строки в массив StringBuilder,
+     *  заполняет массив длин элементов lenOfArgs
+     *  и находит длину самого длинного элемента maxLen.
+     */
     private void sExp2sbAraryParsing() {
         String tmp = sExp.trim().replace(" ", "");
         sbArgsArray = new StringBuilder[argsNum];
         StringBuilder tmpSB = new StringBuilder();
-        int j = 0;
-        for (int i = 0; i < tmp.length(); i++) {
-            if (tmp.charAt(i) == '+' || tmp.charAt(i) == '=') {
-                sbArgsArray[j] = tmpSB;
-                j++;
+        int argN = 0;
+        for (int i = 0; i <= tmp.length(); i++) {
+            if (i == tmp.length() || tmp.charAt(i) == '+' || tmp.charAt(i) == '=') {
+                sbArgsArray[argN] = tmpSB;
+                lenOfArgs[argN] = tmpSB.length();
+                if(lenOfArgs[argN] > maxLen) maxLen = lenOfArgs[argN]; 
+                argN++;
                 tmpSB = new StringBuilder();
                 continue;
             }
             tmpSB.append(tmp.charAt(i));
         }
-        sbArgsArray[j] = tmpSB;
     }
 
     public String restRes() {
         String result = "";
-        int maxLen = calcLengthOfArgs(); // читаем длины и находим больший аргумент
-        int[] tmpArgs = new int[argsNum]; // значения аргументов для тек. разряда
-        int[] sumArgs = new int[argsNum]; // суммы элементов аргументов
+        int[] tmpArgs; // значения аргументов для тек. разряда
+        int[] sumArgs; // суммы элементов аргументов
+        
         for(int razr = 0; razr <= maxLen; razr++) {
-            parse2tmpArgs(razr, maxLen, tmpArgs);
+            tmpArgs = new int[argsNum];
+            sumArgs = new int[argsNum];
+
+            // for (int i : tmpArgs) System.out.println(i);
+
+            parse2tmpArgs(razr, tmpArgs);
+
+            for (int i : tmpArgs) System.out.println(i);
+
             if(findVar(tmpArgs, arg0)) {
                 summation(sumArgs, tmpArgs, razr);
             }
@@ -107,30 +128,34 @@ public class Restoration {
     }
 
 
+    // TODO: додумать рекурсию!!!
 
     /** Рекурсивный поиск варианта выражения в текущем разряде
      * @param tmpArgs - массив значений в текущем разряде
-     * @param argX - текущий аргумент
+     * @param argN - текущий аргумент
      * @return - возвращает true, если найдено хоть одно решение
      */
-    private boolean findVar(int[] tmpArgs, int argX){
+    private boolean findVar(int[] tmpArgs, int argN){
+        if(argN >= argsNum) return false;
         if(tmpArgs[arg0] != -1 && tmpArgs[arg1] != -1 && tmpArgs[arg2] != -1) {
             if(tmpArgs[arg0] + tmpArgs[arg1] == tmpArgs[arg2]) return true;
             else return false;
         }
-        if(tmpArgs[argX] == -1) {
+        if(tmpArgs[argN] == -1) {
             for(int i = 0; i < 10; i++){
-                tmpArgs[argX] = i;
-                if(findVar(tmpArgs, ++argX)) return true;
+                tmpArgs[argN] = i;
+                if(argN < argsNum) argN++;
+                if(!findVar(tmpArgs, argN)) continue;
+                else return true;
             }
-        } else if(findVar(tmpArgs, ++argX)) return true;
+        } else if(findVar(tmpArgs, ++argN)) return true;
         return false;
     }
 
 
     private boolean calcQuestions(int[] tmpArgs) {
         int count = 0;
-        for(int i = 0; i < argsNum; i++) { // подсчёт ? в тек. разряде
+        for(int i = 0; i < argsNum; i++) { // подсчёт "?" в тек. разряде
             if(tmpArgs[i] == -1) count++;
         }
         if(count > questionsNum) questionsNum = count; // запись в глоб.
@@ -142,32 +167,36 @@ public class Restoration {
 
     /** заполняем темповый int массив аргументов на теущем разряде
      * @param razr - текущий разряд аргументов
-     * @param maxLen - длина аргумента максимальной длины
      * @param tmpArgs - ссылка на темповый int массив
      */
-    private void parse2tmpArgs(int razr, int maxLen, int[] tmpArgs) {
+    private void parse2tmpArgs(int razr, int[] tmpArgs) {
         Character tmp;
+        int curIndex;
         for(int i = 0 ; i < argsNum ; i++) {
-            if(lenOfArgs[i] > 0) {
-                tmp = sbArgsArray[arg0].charAt(lenOfArgs[i] - razr);
-                if(ch2int.containsKey(tmp))
-                    tmpArgs[i] = sbArgsArray[i].charAt(lenOfArgs[i] - razr);
-                else   
+            curIndex = lenOfArgs[i] - 1 - razr;
+
+            // System.out.println(curIndex);
+            
+            if(curIndex >= 0) {
+                tmp = sbArgsArray[i].charAt(curIndex);
+                
+                // System.out.println(tmp);
+                
+                if(ch2int.containsKey(tmp)) tmpArgs[i] = tmp;
+                else {
                     System.out.println("Неправильный символ в выражении: " + tmp);
                     System.exit(0);
-            } else {
-                tmp = '0';
+                }
+            }
+            else {
+                    tmp = '0';
             }
             tmpArgs[i] = ch2int.get(tmp);
+            
+            // System.out.println(tmpArgs[i]);
+            
+
         }
     } 
 
-    private int calcLengthOfArgs(){
-        int tmp = 0;
-        for(int i = 0 ; i < argsNum; i++){
-            lenOfArgs[i] = sbArgsArray[i].length();
-            if(tmp < lenOfArgs[i]) tmp = lenOfArgs[i];
-        }
-        return tmp; // возвращаем размер аргумента максимальной длины
-    }
 }
