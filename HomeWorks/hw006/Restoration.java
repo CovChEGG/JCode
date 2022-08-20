@@ -54,7 +54,7 @@ public class Restoration {
         }
     }
 
-    public void restRes() {
+    private void restRes() {
         int[] tmpArgs; // значения аргументов для тек. разряда
         for(int razr = 0; razr < maxLen; razr++) {
             tmpArgs = new int[argsNum];
@@ -68,6 +68,8 @@ public class Restoration {
                 questionsNum = 4;
             }
         }
+        // проверка на "остаток" для отсутствующего вышестоящего разряда.
+        if(fromPreviousRazr != 0) questionsNum = 4;
     }
 
     /** заполняем темповый int массив аргументов на теущем разряде
@@ -133,6 +135,11 @@ public class Restoration {
         }
     }
 
+    /**Подсчитывает количество знаков "?" (int -1) в текущем разряде. 
+     * Сохраняет максимально встречающееся количество в глобальной 
+     * перменной questionsNum для формулировки описания.
+     * @param tmpArgs принимает числа из одного разряда аргументов
+     */
     private void calcQuestionsInRazr(int[] tmpArgs) {
         int count = 0;
         for(int i = 0; i < argsNum; i++) { // подсчёт "?" в тек. разряде
