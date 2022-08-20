@@ -1,5 +1,4 @@
 import java.util.HashMap;
-import java.util.function.ToDoubleBiFunction;
 
 public class Restoration {
     final int argsNum = 3;
@@ -41,6 +40,7 @@ public class Restoration {
     private int[] lenOfArgs = new int[argsNum]; 
     private int maxLen = 0;
     private int questionsNum = 0;
+    private int fromPreviousRazr = 0;
     // private int[][] argsQs;
     
     
@@ -53,8 +53,8 @@ public class Restoration {
         for (int i=0; i < argsNum; i++) {
             System.out.println(sbArgsArray[i].toString());
         }
-        System.out.println(maxLen);
-        for (int i : lenOfArgs) System.out.println(i);
+        // System.out.println(maxLen);
+        // for (int i : lenOfArgs) System.out.println(i);
     }    
 
     /** Переводит выражение из строки в массив StringBuilder,
@@ -84,7 +84,7 @@ public class Restoration {
         int[] tmpArgs; // значения аргументов для тек. разряда
         int[] sumArgs; // суммы элементов аргументов
         
-        for(int razr = 0; razr <= maxLen; razr++) {
+        for(int razr = 0; razr < maxLen; razr++) {
             tmpArgs = new int[argsNum];
             sumArgs = new int[argsNum];
 
@@ -92,9 +92,13 @@ public class Restoration {
 
             parse2tmpArgs(razr, tmpArgs);
 
+            System.out.println(17%10 + " " + 7%10 + " " + 17/10 + " " + 7/10);
             for (int i : tmpArgs) System.out.println(i);
 
             if(findVar(tmpArgs, arg0)) {
+                
+                for (int i : tmpArgs) System.out.println(i);
+
                 summation(sumArgs, tmpArgs, razr);
             }
             else {
@@ -128,29 +132,49 @@ public class Restoration {
     }
 
 
-    // TODO: додумать рекурсию!!!
-
     /** Рекурсивный поиск варианта выражения в текущем разряде
      * @param tmpArgs - массив значений в текущем разряде
      * @param argN - текущий аргумент
      * @return - возвращает true, если найдено хоть одно решение
      */
     private boolean findVar(int[] tmpArgs, int argN){
-        if(argN >= argsNum) return false;
-        if(tmpArgs[arg0] != -1 && tmpArgs[arg1] != -1 && tmpArgs[arg2] != -1) {
-            if(tmpArgs[arg0] + tmpArgs[arg1] == tmpArgs[arg2]) return true;
+        if(argN >= argsNum ) {
+            int sum = tmpArgs[arg0] + tmpArgs[arg1];
+            int arg2tmp = tmpArgs[arg2] + fromPreviousRazr;
+            if(sum % 10 == arg2tmp) {
+                    fromPreviousRazr = sum / 10;
+                    return true;
+                }
             else return false;
-        }
-        if(tmpArgs[argN] == -1) {
+        } else if(tmpArgs[argN] == -1) {
             for(int i = 0; i < 10; i++){
                 tmpArgs[argN] = i;
-                if(argN < argsNum) argN++;
-                if(!findVar(tmpArgs, argN)) continue;
+                if(!findVar(tmpArgs, ++argN)) { 
+                    argN--;
+                    continue; 
+                }
                 else return true;
             }
         } else if(findVar(tmpArgs, ++argN)) return true;
         return false;
     }
+
+
+
+    //     if(tmpArgs[arg0] != -1 && tmpArgs[arg1] != -1 && tmpArgs[arg2] != -1) {
+    //         if(tmpArgs[arg0] + tmpArgs[arg1] == tmpArgs[arg2]) return true;
+    //         else return false;
+    //     }
+    //     if(tmpArgs[argN] == -1) {
+    //         for(int i = 0; i < 10; i++){
+    //             tmpArgs[argN] = i;
+    //             if(argN < argsNum) argN++;
+    //             if(!findVar(tmpArgs, argN)) continue;
+    //             else return true;
+    //         }
+    //     } else if(findVar(tmpArgs, ++argN)) return true;
+    //     return false;
+    // }
 
 
     private boolean calcQuestions(int[] tmpArgs) {
