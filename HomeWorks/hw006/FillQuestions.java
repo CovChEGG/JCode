@@ -8,8 +8,9 @@
 
 public class FillQuestions {
     public static void main(String[] args) {
-        String exp = "2?+?5=69";
+        String exp = "1??+?45=3?6";
+        // String exp = "1??+?45=326";
         Restoration reExp = new Restoration(exp);
-        System.out.println(reExp.restRes());
+        System.out.println(reExp.GetRes() + "\n");
     }
 }
